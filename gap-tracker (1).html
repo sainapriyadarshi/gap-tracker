@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Political Gender Gap Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --red: #C41230;
+    --red-dark: #9a0d24;
+    --red-light: #f2c4ce;
+    --navy: #1C2340;
+    --cream: #faf7f4;
+    --warm: #f9e4e8;
+    --muted: #7a7f94;
+  }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--navy);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--navy);
+    padding: 48px 40px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: var(--red);
+    opacity: 0.12;
+  }
+  .header-tag {
+    display: inline-block;
+    background: var(--red);
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 2px;
+    margin-bottom: 18px;
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(26px, 4.5vw, 44px);
+    font-weight: 900;
+    color: white;
+    line-height: 1.15;
+    max-width: 580px;
+    margin-bottom: 14px;
+  }
+  header h1 em { color: var(--red-light); font-style: italic; }
+  header p {
+    color: rgba(255,255,255,0.6);
+    font-size: 15px;
+    max-width: 480px;
+    line-height: 1.65;
+    font-weight: 300;
+  }
+
+  /* NATIONAL BAR */
+  .national-bar {
+    background: var(--red);
+    padding: 18px 40px;
+    display: flex;
+    gap: 36px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .nat-label {
+    color: rgba(255,255,255,0.7);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .nat-stat {
+    color: white;
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .nat-stat span {
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+    opacity: 0.75;
+    margin-left: 3px;
+  }
+  .nat-divider { width: 1px; height: 36px; background: rgba(255,255,255,0.2); }
+
+  /* MAIN */
+  .main { padding: 40px; max-width: 860px; margin: 0 auto; }
+
+  /* SELECTOR */
+  .selector-label {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .state-select {
+    width: 100%;
+    padding: 14px 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--navy);
+    background: white;
+    border: 2px solid #e8e2dc;
+    border-radius: 6px;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231C2340' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    margin-bottom: 36px;
+    transition: border-color 0.2s;
+  }
+  .state-select:focus { outline: none; border-color: var(--red); }
+
+  /* RESULTS — hidden until state chosen */
+  #results { display: block; }
+  #placeholder { text-align: center; padding: 48px 20px; color: var(--muted); font-size: 15px; }
+
+  .state-name {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(24px, 4vw, 38px);
+    font-weight: 900;
+    color: var(--navy);
+    margin-bottom: 4px;
+  }
+  .state-context {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 32px;
+    font-weight: 300;
+  }
+  .state-context strong { color: var(--red); font-weight: 600; }
+
+  /* CARDS */
+  .cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 24px;
+  }
+  .card {
+    background: white;
+    border-radius: 10px;
+    padding: 26px;
+    border: 1px solid #ede8e2;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: var(--red);
+  }
+  .card.navy::before { background: var(--navy); }
+  .card-label {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+  .card-pct {
+    font-family: 'Playfair Display', serif;
+    font-size: 50px;
+    font-weight: 900;
+    line-height: 1;
+    color: var(--navy);
+    margin-bottom: 2px;
+  }
+  .card-pct.red { color: var(--red); }
+  .card-sub { font-size: 12px; color: var(--muted); margin-bottom: 18px; }
+  .bar-wrap { height: 7px; background: #f0ebe5; border-radius: 99px; overflow: hidden; margin-bottom: 8px; }
+  .bar-fill { height: 100%; border-radius: 99px; background: var(--red); transition: width 0.7s cubic-bezier(0.4,0,0.2,1); }
+  .bar-fill.nv { background: var(--navy); }
+  .bar-legend { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
+
+  /* GAP CALLOUT */
+  .gap-callout {
+    background: var(--navy);
+    border-radius: 10px;
+    padding: 26px 30px;
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .gap-number {
+    font-family: 'Playfair Display', serif;
+    font-size: 54px;
+    font-weight: 900;
+    color: var(--red-light);
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .gap-text h3 { color: white; font-size: 16px; font-weight: 600; margin-bottom: 5px; }
+  .gap-text p { color: rgba(255,255,255,0.55); font-size: 13px; line-height: 1.65; font-weight: 300; }
+
+  /* CONGRESS */
+  .congress-section {
+    background: white;
+    border-radius: 10px;
+    padding: 26px;
+    border: 1px solid #ede8e2;
+    margin-bottom: 24px;
+  }
+  .section-title {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+  .congress-row { margin-bottom: 18px; }
+  .congress-row:last-child { margin-bottom: 0; }
+  .congress-label { font-size: 13px; font-weight: 500; color: var(--navy); margin-bottom: 7px; display: flex; justify-content: space-between; }
+  .congress-label span { color: var(--red); font-weight: 600; }
+
+  /* CTA */
+  .cta-strip {
+    background: var(--warm);
+    border: 1px solid #f0d5da;
+    border-radius: 10px;
+    padding: 22px 26px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+  .cta-text { font-size: 15px; font-weight: 600; color: var(--navy); }
+  .cta-text p { font-size: 13px; color: var(--muted); font-weight: 400; margin-top: 3px; }
+  .cta-btn {
+    background: var(--red);
+    color: white;
+    border: none;
+    padding: 12px 22px;
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .cta-btn:hover { background: var(--red-dark); }
+
+  .footer-note {
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    padding-bottom: 40px;
+    line-height: 1.9;
+  }
+  .footer-note a { color: var(--red); text-decoration: none; font-weight: 500; }
+
+  @media (max-width: 580px) {
+    .cards { grid-template-columns: 1fr; }
+    .national-bar { gap: 18px; padding: 16px 20px; }
+    .main { padding: 24px 18px; }
+    header { padding: 36px 20px 30px; }
+    .nat-divider { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-tag">League of Young Women in Politics</div>
+  <h1>Women are 51% of America.<br><em>Where are they in office?</em></h1>
+  <p>Select your state to see how women are represented in your state legislature and in Congress — and understand the gap we're working to close.</p>
+</header>
+
+<div class="national-bar">
+  <div>
+    <div class="nat-label">U.S. Senate</div>
+    <div class="nat-stat">25% <span>women</span></div>
+  </div>
+  <div class="nat-divider"></div>
+  <div>
+    <div class="nat-label">U.S. House</div>
+    <div class="nat-stat">28.9% <span>women</span></div>
+  </div>
+  <div class="nat-divider"></div>
+  <div>
+    <div class="nat-label">State Legislatures (avg)</div>
+    <div class="nat-stat">32.7% <span>women</span></div>
+  </div>
+  <div class="nat-divider"></div>
+  <div>
+    <div class="nat-label">Share of U.S. Population</div>
+    <div class="nat-stat">51% <span>women</span></div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="selector-label">Select your state</div>
+  <select class="state-select" id="stateSelect" onchange="updateState()">
+    <option value="">— Choose a state —</option>
+    <option value="AL">Alabama</option>
+    <option value="AK">Alaska</option>
+    <option value="AZ">Arizona</option>
+    <option value="AR">Arkansas</option>
+    <option value="CA">California</option>
+    <option value="CO">Colorado</option>
+    <option value="CT">Connecticut</option>
+    <option value="DE">Delaware</option>
+    <option value="FL">Florida</option>
+    <option value="GA">Georgia</option>
+    <option value="HI">Hawaii</option>
+    <option value="ID">Idaho</option>
+    <option value="IL">Illinois</option>
+    <option value="IN">Indiana</option>
+    <option value="IA">Iowa</option>
+    <option value="KS">Kansas</option>
+    <option value="KY">Kentucky</option>
+    <option value="LA">Louisiana</option>
+    <option value="ME">Maine</option>
+    <option value="MD">Maryland</option>
+    <option value="MA">Massachusetts</option>
+    <option value="MI">Michigan</option>
+    <option value="MN">Minnesota</option>
+    <option value="MS">Mississippi</option>
+    <option value="MO">Missouri</option>
+    <option value="MT">Montana</option>
+    <option value="NE">Nebraska</option>
+    <option value="NV">Nevada</option>
+    <option value="NH">New Hampshire</option>
+    <option value="NJ">New Jersey</option>
+    <option value="NM">New Mexico</option>
+    <option value="NY">New York</option>
+    <option value="NC">North Carolina</option>
+    <option value="ND">North Dakota</option>
+    <option value="OH">Ohio</option>
+    <option value="OK">Oklahoma</option>
+    <option value="OR">Oregon</option>
+    <option value="PA">Pennsylvania</option>
+    <option value="RI">Rhode Island</option>
+    <option value="SC">South Carolina</option>
+    <option value="SD">South Dakota</option>
+    <option value="TN">Tennessee</option>
+    <option value="TX">Texas</option>
+    <option value="UT">Utah</option>
+    <option value="VT">Vermont</option>
+    <option value="VA">Virginia</option>
+    <option value="WA">Washington</option>
+    <option value="WV">West Virginia</option>
+    <option value="WI">Wisconsin</option>
+    <option value="WY">Wyoming</option>
+  </select>
+
+  <div id="placeholder" style="text-align:center;padding:60px 20px;color:var(--muted);font-size:15px;">👆 Select a state above to see the data</div>
+  <div id="results" style="visibility:hidden;height:0;overflow:hidden;">
+    <div class="state-name" id="stateName"></div>
+    <div class="state-context" id="stateContext"></div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-label">State Legislature — Women</div>
+        <div class="card-pct red" id="statePct">—</div>
+        <div class="card-sub" id="stateSub"></div>
+        <div class="bar-wrap"><div class="bar-fill" id="stateBar" style="width:0%"></div></div>
+        <div class="bar-legend"><span id="stateWomen"></span><span>51% = parity</span></div>
+      </div>
+      <div class="card navy">
+        <div class="card-label">U.S. Congress — Women from this state</div>
+        <div class="card-pct" id="congPct">—</div>
+        <div class="card-sub" id="congSub"></div>
+        <div class="bar-wrap"><div class="bar-fill nv" id="congBar" style="width:0%"></div></div>
+        <div class="bar-legend"><span id="congWomen"></span><span>51% = parity</span></div>
+      </div>
+    </div>
+
+    <div class="gap-callout">
+      <div class="gap-number" id="gapNumber">—</div>
+      <div class="gap-text">
+        <h3 id="gapHeadline"></h3>
+        <p id="gapDesc"></p>
+      </div>
+    </div>
+
+    <div class="congress-section">
+      <div class="section-title">Congressional Breakdown</div>
+      <div class="congress-row">
+        <div class="congress-label">U.S. Senate seats held by women <span id="senateDetail"></span></div>
+        <div class="bar-wrap"><div class="bar-fill" id="senateBar" style="width:0%"></div></div>
+      </div>
+      <div class="congress-row">
+        <div class="congress-label">U.S. House seats held by women <span id="houseDetail"></span></div>
+        <div class="bar-wrap"><div class="bar-fill nv" id="houseBar" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div class="cta-strip">
+      <div class="cta-text">
+        Ready to change these numbers?
+        <p>Start a League chapter at your high school.</p>
+      </div>
+      <a class="cta-btn" href="#">Start a Chapter</a>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    Data sourced from the <a href="https://cawp.rutgers.edu" target="_blank">Center for American Women and Politics (CAWP)</a> at Rutgers University, 2024–2025.<br>
+    Congressional data reflects the 119th Congress. State legislative data reflects post-2024 election figures.
+  </div>
+</div>
+
+<script>
+// Data: [stateLegPct, senateWomen (out of 2), houseWomen, houseTotalSeats, stateName]
+// State legislative % women from CAWP 2024 post-election data
+// Congressional women from 119th Congress (2025)
+const stateData = {
+  AL: { name: "Alabama",       legPct: 15.7, senW: 0, houseW: 1,  houseTotal: 7  },
+  AK: { name: "Alaska",        legPct: 27.9, senW: 1, houseW: 0,  houseTotal: 1  },
+  AZ: { name: "Arizona",       legPct: 38.9, senW: 1, houseW: 3,  houseTotal: 9  },
+  AR: { name: "Arkansas",      legPct: 22.3, senW: 0, houseW: 0,  houseTotal: 4  },
+  CA: { name: "California",    legPct: 42.5, senW: 2, houseW: 20, houseTotal: 52 },
+  CO: { name: "Colorado",      legPct: 47.7, senW: 2, houseW: 3,  houseTotal: 8  },
+  CT: { name: "Connecticut",   legPct: 40.9, senW: 0, houseW: 2,  houseTotal: 5  },
+  DE: { name: "Delaware",      legPct: 36.1, senW: 1, houseW: 1,  houseTotal: 1  },
+  FL: { name: "Florida",       legPct: 26.9, senW: 1, houseW: 7,  houseTotal: 28 },
+  GA: { name: "Georgia",       legPct: 29.3, senW: 0, houseW: 6,  houseTotal: 14 },
+  HI: { name: "Hawaii",        legPct: 40.6, senW: 1, houseW: 1,  houseTotal: 2  },
+  ID: { name: "Idaho",         legPct: 26.2, senW: 0, houseW: 0,  houseTotal: 2  },
+  IL: { name: "Illinois",      legPct: 42.3, senW: 1, houseW: 6,  houseTotal: 17 },
+  IN: { name: "Indiana",       legPct: 24.4, senW: 0, houseW: 2,  houseTotal: 9  },
+  IA: { name: "Iowa",          legPct: 28.3, senW: 0, houseW: 1,  houseTotal: 4  },
+  KS: { name: "Kansas",        legPct: 31.6, senW: 0, houseW: 1,  houseTotal: 4  },
+  KY: { name: "Kentucky",      legPct: 22.7, senW: 0, houseW: 1,  houseTotal: 6  },
+  LA: { name: "Louisiana",     legPct: 18.6, senW: 0, houseW: 1,  houseTotal: 6  },
+  ME: { name: "Maine",         legPct: 46.7, senW: 2, houseW: 1,  houseTotal: 2  },
+  MD: { name: "Maryland",      legPct: 47.2, senW: 1, houseW: 4,  houseTotal: 8  },
+  MA: { name: "Massachusetts", legPct: 41.3, senW: 1, houseW: 5,  houseTotal: 9  },
+  MI: { name: "Michigan",      legPct: 41.7, senW: 1, houseW: 5,  houseTotal: 13 },
+  MN: { name: "Minnesota",     legPct: 45.3, senW: 1, houseW: 4,  houseTotal: 8  },
+  MS: { name: "Mississippi",   legPct: 16.5, senW: 0, houseW: 0,  houseTotal: 4  },
+  MO: { name: "Missouri",      legPct: 26.5, senW: 0, houseW: 1,  houseTotal: 8  },
+  MT: { name: "Montana",       legPct: 31.3, senW: 0, houseW: 0,  houseTotal: 2  },
+  NE: { name: "Nebraska",      legPct: 32.7, senW: 0, houseW: 0,  houseTotal: 3  },
+  NV: { name: "Nevada",        legPct: 52.4, senW: 1, houseW: 2,  houseTotal: 4  },
+  NH: { name: "New Hampshire", legPct: 44.5, senW: 1, houseW: 1,  houseTotal: 2  },
+  NJ: { name: "New Jersey",    legPct: 35.0, senW: 1, houseW: 4,  houseTotal: 12 },
+  NM: { name: "New Mexico",    legPct: 52.1, senW: 1, houseW: 2,  houseTotal: 3  },
+  NY: { name: "New York",      legPct: 40.2, senW: 1, houseW: 10, houseTotal: 26 },
+  NC: { name: "North Carolina",legPct: 30.7, senW: 0, houseW: 4,  houseTotal: 14 },
+  ND: { name: "North Dakota",  legPct: 22.9, senW: 0, houseW: 0,  houseTotal: 1  },
+  OH: { name: "Ohio",          legPct: 28.5, senW: 0, houseW: 3,  houseTotal: 15 },
+  OK: { name: "Oklahoma",      legPct: 17.6, senW: 0, houseW: 1,  houseTotal: 5  },
+  OR: { name: "Oregon",        legPct: 44.4, senW: 2, houseW: 3,  houseTotal: 6  },
+  PA: { name: "Pennsylvania",  legPct: 30.9, senW: 1, houseW: 5,  houseTotal: 17 },
+  RI: { name: "Rhode Island",  legPct: 40.0, senW: 1, houseW: 1,  houseTotal: 2  },
+  SC: { name: "South Carolina",legPct: 18.9, senW: 0, houseW: 1,  houseTotal: 7  },
+  SD: { name: "South Dakota",  legPct: 28.3, senW: 0, houseW: 0,  houseTotal: 1  },
+  TN: { name: "Tennessee",     legPct: 19.2, senW: 0, houseW: 2,  houseTotal: 9  },
+  TX: { name: "Texas",         legPct: 27.3, senW: 1, houseW: 11, houseTotal: 38 },
+  UT: { name: "Utah",          legPct: 26.3, senW: 0, houseW: 0,  houseTotal: 4  },
+  VT: { name: "Vermont",       legPct: 44.2, senW: 1, houseW: 1,  houseTotal: 1  },
+  VA: { name: "Virginia",      legPct: 40.6, senW: 1, houseW: 4,  houseTotal: 11 },
+  WA: { name: "Washington",    legPct: 48.6, senW: 2, houseW: 4,  houseTotal: 10 },
+  WV: { name: "West Virginia", legPct: 18.3, senW: 0, houseW: 0,  houseTotal: 2  },
+  WI: { name: "Wisconsin",     legPct: 34.8, senW: 1, houseW: 2,  houseTotal: 8  },
+  WY: { name: "Wyoming",       legPct: 21.7, senW: 1, houseW: 0,  houseTotal: 1  },
+};
+
+function updateState() {
+  const code = document.getElementById('stateSelect').value;
+  if (!code) { document.getElementById('placeholder').style.display='block'; document.getElementById('results').style.visibility='hidden'; document.getElementById('results').style.height='0'; document.getElementById('results').style.overflow='hidden'; return; }
+
+  const d = stateData[code];
+  const gap = (51 - d.legPct).toFixed(1);
+  const congTotal = d.houseTotal + 2;
+  const congWomen = d.houseW + d.senW;
+  const congPct = ((congWomen / congTotal) * 100).toFixed(1);
+  const senatePct = d.senW === 2 ? 100 : d.senW === 1 ? 50 : 0;
+  const housePct = d.houseTotal > 0 ? ((d.houseW / d.houseTotal) * 100).toFixed(1) : 0;
+
+  document.getElementById('stateName').textContent = d.name;
+  document.getElementById('stateContext').innerHTML =
+    `Women make up roughly 51% of ${d.name}'s population — but only <strong>${d.legPct}%</strong> of its state legislators.`;
+
+  document.getElementById('statePct').textContent = d.legPct + '%';
+  document.getElementById('stateSub').textContent = 'of state legislators are women';
+  document.getElementById('stateBar').style.width = Math.min(d.legPct, 100) + '%';
+  document.getElementById('stateWomen').textContent = d.legPct + '% women';
+
+  document.getElementById('congPct').textContent = congPct + '%';
+  document.getElementById('congSub').textContent = `${congWomen} of ${congTotal} congressional seats`;
+  document.getElementById('congBar').style.width = Math.min(congPct, 100) + '%';
+  document.getElementById('congWomen').textContent = congPct + '% women';
+
+  const gapVal = parseFloat(gap);
+  document.getElementById('gapNumber').textContent = (gapVal > 0 ? '+' : '') + gap + '%';
+  document.getElementById('gapHeadline').textContent =
+    gapVal > 0
+      ? `${d.name} has a ${gap}-point representation gap`
+      : `${d.name} has reached or exceeded parity!`;
+  document.getElementById('gapDesc').textContent =
+    gapVal > 0
+      ? `To reflect its population, ${d.name}'s legislature needs ${gap} more percentage points of women. That's the gap the next generation of leaders needs to close.`
+      : `${d.name} is one of the few states where women hold at least half of legislative seats. There's still work to do nationally.`;
+
+  document.getElementById('senateDetail').textContent =
+    `— ${d.senW} of 2 seats (${senatePct}%)`;
+  document.getElementById('senateBar').style.width = senatePct + '%';
+
+  document.getElementById('houseDetail').textContent =
+    `— ${d.houseW} of ${d.houseTotal} seats (${housePct}%)`;
+  document.getElementById('houseBar').style.width = Math.min(housePct, 100) + '%';
+
+  document.getElementById('placeholder').style.display='none'; document.getElementById('results').style.visibility='visible'; document.getElementById('results').style.height='auto'; document.getElementById('results').style.overflow='visible'; window.parent.postMessage({type:'iframeResize', height: document.body.scrollHeight}, '*');
+}
+</script>
+</body>
+</html>
